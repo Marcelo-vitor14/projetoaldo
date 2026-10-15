@@ -1,0 +1,1 @@
+"""Ferramentas determinísticas do assistente."""

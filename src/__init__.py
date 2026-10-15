@@ -1,0 +1,1 @@
+"""Tira-Dúvidas Acadêmico."""
