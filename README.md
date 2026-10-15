@@ -30,7 +30,12 @@ Em outro terminal, com o mesmo ambiente virtual ativado:
 streamlit run src/frontend/app.py --server.port 8501
 ```
 
-Abra `http://localhost:8501`. A documentação interativa da API fica em `http://localhost:8000/docs`.
+Há duas interfaces:
+
+- **Web (recomendada):** `http://localhost:8000`, servida pela própria API (`src/web/index.html`, HTML/CSS/JS sem dependências). Chat com sugestões, fontes clicáveis que abrem o artigo grifado num painel e calculadora com a régua das faixas de aprovação.
+- **Streamlit:** `http://localhost:8501`, a interface prevista na Spec, com tema escuro.
+
+A documentação interativa da API fica em `http://localhost:8000/docs`.
 
 ## Como funciona
 

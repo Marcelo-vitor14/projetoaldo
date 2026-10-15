@@ -5,10 +5,11 @@ import re
 import time
 import uuid
 import os
+from pathlib import Path
 
 import structlog
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -90,6 +91,15 @@ _NOTAS_RE = (
 
 def _formatar_nota(valor: float) -> str:
     return f"{valor:.2f}".rstrip("0").rstrip(".")
+
+
+WEB_INDEX = Path(__file__).resolve().parent.parent / "web" / "index.html"
+
+
+@app.get("/", include_in_schema=False)
+async def pagina_inicial() -> FileResponse:
+    """Interface web do chat (HTML/CSS/JS sem dependências), servida pela própria API."""
+    return FileResponse(WEB_INDEX, media_type="text/html")
 
 
 @app.get("/health/liveness")

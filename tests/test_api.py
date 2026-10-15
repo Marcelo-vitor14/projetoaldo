@@ -16,6 +16,14 @@ def test_liveness_retorna_ok():
     assert response.headers["x-request-id"]
 
 
+def test_pagina_web_e_servida_na_raiz():
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Tira-Dúvidas" in response.text
+
+
 def test_cors_so_permite_origem_configurada():
     permitted = client.get("/health/liveness", headers={"Origin": "http://localhost:8501"})
     blocked = client.get("/health/liveness", headers={"Origin": "https://example.invalid"})
