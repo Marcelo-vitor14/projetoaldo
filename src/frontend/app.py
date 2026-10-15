@@ -7,7 +7,7 @@ import httpx
 import streamlit as st
 
 API_URL = os.getenv("API_BASE_URL", "http://localhost:8000").rstrip("/")
-TIMEOUT = httpx.Timeout(10.0, connect=2.0)
+TIMEOUT = httpx.Timeout(40.0, connect=2.0)
 
 st.set_page_config(page_title="Apoio Acadêmico", page_icon="🎓", layout="wide")
 st.markdown(
@@ -108,6 +108,8 @@ with chat_tab:
                 answer = "Não consegui processar essa mensagem. Confira os dados e tente novamente."
                 if exc.response.status_code == 429:
                     answer = "Muitas solicitações em sequência. Aguarde um instante e tente novamente."
+                elif exc.response.status_code == 503:
+                    answer = "O assistente está temporariamente indisponível. Tente novamente em instantes."
                 st.error(answer)
                 sources = []
             except (httpx.HTTPError, ValueError, KeyError):
@@ -165,6 +167,6 @@ with about_tab:
         - **Consulta acadêmica:** deve responder com base no Regimento e no Manual, mostrando artigo e página.
         - **Cálculo:** MP = (P1 + P2) / 2. Com MP ≥ 7, aprovação direta; com 4 ≤ MP < 7, a nota da final é 12 − MP; com MP < 4, reprovação direta.
         - **Privacidade:** o histórico fica na sessão desta interface e não é gravado pela API nesta versão.
-        - **Limite atual:** a interface já trata citações, mas elas só aparecerão após a ingestão dos PDFs e ativação do RAG.
+        - **Inteligência artificial:** o Google Gemini entende a pergunta, busca os trechos no Regimento e no Manual (RAG) e chama a calculadora para as contas.
         """
     )

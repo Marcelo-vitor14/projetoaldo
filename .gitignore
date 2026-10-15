@@ -6,6 +6,7 @@ __pycache__/
 .streamlit/secrets.toml
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/*_IUVA_2026.pdf
 data/vectordb/
 .coverage
 htmlcov/
