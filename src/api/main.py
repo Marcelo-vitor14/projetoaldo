@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 allowed_origins = [
     origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "http://localhost:8501").split(",")
+    for origin in os.getenv("CORS_ORIGINS", "http://localhost:8000").split(",")
     if origin.strip()
 ]
 app.add_middleware(

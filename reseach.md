@@ -36,18 +36,31 @@ Condição para revisão: Alteração drástica na API do provedor de IA que des
 Documentação da API Google GenAI / Gemini Function Calling.
 Suíte de testes unitários do módulo src/tools/calculator.py.
 ## Decisão DTEC 003 — Estratégia de Isolamento de Camadas e Desacoplamento do Frontend/Backend
-Questão: Como estruturar a comunicação entre a interface do usuário (Streamlit) e a inteligência do sistema (RAG, Agente e Tools)?
+Questão: Como estruturar a comunicação entre a interface do usuário e a inteligência do sistema (RAG, Agente e Tools)?
 Critérios: Separação de responsabilidades, facilitando manutenção, capacidade de reutilização do backend para outras interfaces (como apps móveis) e suporte a testes de integração isolados.
 ## Alternativas consideradas:
-Aplicação Monolítica Única no Streamlit: Executar a lógica RAG, o agente e a interface tudo dentro do mesmo script do Streamlit. Facilita o protótipo inicial, mas dificulta testes unitários da API, acopla a lógica ao ciclo de vida de renderização do Streamlit e impede reutilização do backend.
-Arquitetura Desacoplada (Backend FastAPI + Frontend Streamlit): O backend expõe uma API REST/HTTP assíncrona (POST /api/v1/chat) e o Streamlit atua exclusivamente como cliente HTTP visual consumindo o contrato JSON.
-Decisão: Opção 2 — Arquitetura desacoplada utilizando FastAPI como servidor de API e Streamlit como cliente de interface.
-Justificativa: A separação permite testar a inteligência do sistema via endpoints HTTP assíncronos e suítes de Evals automatizadas independentemente da interface gráfica. Além disso, previne recarregamentos indesejados da memória do modelo e do banco vetorial durante o ciclo de vida reativo do Streamlit.
+Aplicação Monolítica Única: Executar a lógica RAG, o agente e a interface no mesmo código de tela. Facilita o protótipo inicial, mas dificulta testes unitários da API, acopla a lógica à interface e impede reutilização do backend.
+Arquitetura Desacoplada (Backend FastAPI + Frontend web): O backend expõe uma API REST/HTTP assíncrona (POST /api/v1/chat) e a interface web atua exclusivamente como cliente HTTP visual consumindo o contrato JSON.
+Decisão: Opção 2 — Arquitetura desacoplada utilizando FastAPI como servidor de API e uma página web como cliente de interface.
+Justificativa: A separação permite testar a inteligência do sistema via endpoints HTTP assíncronos e suítes de Evals automatizadas independentemente da interface gráfica, e permite trocar a interface sem mexer na API (o que de fato aconteceu, ver DTEC 004).
 
 Vantagens: Código limpo, desacoplado, facilidade de instrumentação com structlog/OpenTelemetry e suporte a múltiplos clientes consumidores.
-Limitaçdataões: Necessidade de orquestrar dois serviços (API backend na porta 8000 e UI na porta 8501) via Docker Compose.
+Limitações: A interface depende do contrato JSON da API; mudanças no contrato precisam ser refletidas na página.
 Trabalho futuro: Adicionar suporte a Streaming responses (Server-Sent Events) no endpoint do FastAPI para exibir respostas caractere a caractere no frontend.
 Condição para revisão: Necessidade de simplificar drásticamente a infraestrutura para rodar em ambientes com restrição severa de memória em desenvolvimento local.
 ## Fontes consultadas:
 Documentação Oficial do FastAPI (Async Endpoints e Pydantic Integration).
 Padrão Arquitetural C4 Model (Container Diagram).
+
+## Decisão DTEC 004 — Interface web própria no lugar do Streamlit
+Data: 15/10/2026
+Questão: A restrição original da Spec previa o frontend em Streamlit. Ele atende ao que a apresentação do MVP precisa mostrar?
+Critérios: Clareza na demonstração (fontes clicáveis com o trecho original, resultado do cálculo destacado conforme RF06), controle do visual, simplicidade de execução e de implantação.
+## Alternativas consideradas:
+1. Manter o Streamlit: rápido de escrever em Python, mas com pouco controle de layout e interação; exige um segundo servidor (porta 8501) e um segundo serviço no Docker Compose.
+2. Página web própria servida pela API: um arquivo HTML/CSS/JS, sem build, entregue pela rota "/" do FastAPI.
+Decisão: Opção 2 — interface web própria em src/web/index.html. O Streamlit (src/frontend) foi removido, junto com a dependência, o serviço do Docker Compose e a variável API_BASE_URL.
+Justificativa: A página web permite citações clicáveis que abrem o artigo grifado e o cartão do cálculo dentro da resposta, e roda no mesmo servidor e na mesma origem da API (sem CORS, uma porta só). Como a arquitetura já era desacoplada (DTEC 003), a troca não exigiu mudança na API além da rota "/".
+Vantagens: Um processo a menos para subir, visual alinhado ao objetivo da demonstração, nenhuma dependência de frontend para instalar.
+Limitações: A interface é escrita em JavaScript, fora da linguagem principal do projeto.
+Condição para revisão: Necessidade de telas administrativas complexas, em que um framework de UI volte a compensar.

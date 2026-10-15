@@ -125,7 +125,7 @@
   - A história P3 (Tratamento de Perguntas Fora de Escopo) deve ser testada de forma autônoma garantindo a taxa de recusa correta.
 
 ### Restrições do Projeto
-- **Tecnologia e Serviços Obrigatórios:** Desenvolvimento em Python 3.11+, backend com FastAPI, frontend com Streamlit, banco vetorial ChromaDB (persistente em disco local) e execução containerizada via Docker Compose.
+- **Tecnologia e Serviços Obrigatórios:** Desenvolvimento em Python 3.11+, backend com FastAPI, frontend web (HTML, CSS e JavaScript) servido pela própria API, banco vetorial ChromaDB (persistente em disco local) e execução containerizada via Docker Compose.
 - **Provedor de Inteligência:** Uso do SDK oficial da API do Google Gemini com gerenciamento de chamadas de função (Function Calling).
 - **Limites de Custo e Infraestrutura:** Custo zero de banco de dados por meio da execução de banco vetorial embarcado e infraestrutura otimizada para implantação em instâncias leves de nuvem (Render, Railway, Fly.io ou K8s).
 - **Segurança e Licenciamento:** Chaves de API gerenciadas estritamente por variáveis de ambiente (`.env`). Projeto construído utilizando bibliotecas e frameworks de código aberto sob licenças permissivas (MIT, Apache 2.0 ou BSD).

@@ -25,10 +25,10 @@ def test_pagina_web_e_servida_na_raiz():
 
 
 def test_cors_so_permite_origem_configurada():
-    permitted = client.get("/health/liveness", headers={"Origin": "http://localhost:8501"})
+    permitted = client.get("/health/liveness", headers={"Origin": "http://localhost:8000"})
     blocked = client.get("/health/liveness", headers={"Origin": "https://example.invalid"})
 
-    assert permitted.headers.get("access-control-allow-origin") == "http://localhost:8501"
+    assert permitted.headers.get("access-control-allow-origin") == "http://localhost:8000"
     assert blocked.headers.get("access-control-allow-origin") is None
 
 

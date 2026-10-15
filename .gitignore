@@ -3,7 +3,6 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.streamlit/secrets.toml
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/*_IUVA_2026.pdf

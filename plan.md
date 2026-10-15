@@ -1,13 +1,13 @@
 # Plan.md — Plano de Arquitetura e Engenharia Técnica
 
 ## 1. Resumo Técnico
-Aplicação Web em Python composta por um backend assíncrono em FastAPI e um frontend reativo em Streamlit, totalmente empacotada em um contêiner Docker.
+Aplicação Web em Python composta por um backend assíncrono em FastAPI e uma interface web (HTML, CSS e JavaScript) servida pela própria API, totalmente empacotada em um contêiner Docker.
 O sistema utiliza o banco vetorial ChromaDB (persistido em disco local com modelo de embeddings `gemini-embedding-001`) para o pipeline RAG e integra um Agente ReAct inteligente capaz de delegar cálculos matemáticos acadêmicos para funções determinísticas puras em Python via Function Calling.
 
 ## 2. Contexto Técnico e Stack Tecnológica
 - **Linguagem & Versão:** Python 3.11+. Selecionado pelo suporte nativo a concorrência assíncrona (`asyncio`), tipagem estrita via Pydantic v2 e ecossistema robusto de IA.
 - **Framework Web Backend:** FastAPI com Uvicorn. Oferece alta performance para I/O assíncrono, validação automática de dados e geração de documentação OpenAPI/Swagger.
-- **Framework Web Frontend:** Streamlit. Permite a rápida criação de interfaces conversacionais ricas sem o overhead de JavaScript.
+- **Frontend:** página web própria (`src/web/index.html`), em HTML, CSS e JavaScript sem build, servida pela própria API na rota `/`. Dá controle total do visual (fontes clicáveis, cartão do cálculo) e dispensa um segundo servidor.
 - **Framework de IA:** Google GenAI SDK / LangChain. Fornece abstração padronizada para Function Calling, gerenciamento de prompts e integração com modelos Gemini.
 - **Modelo de IA & Embeddings:** Google Gemini (`gemini-flash-lite-latest`) para geração e `gemini-embedding-001` para vetorização (768 dimensões). Os modelos previstos originalmente (Gemini 1.5 Flash e `text-embedding-004`) foram descontinuados pelo Google.
 - **Banco Vetorial:** ChromaDB (Persistência em Disco Local em `/app/data/vectordb`). Garante baixo overhead de infraestrutura e suporte a metadados estruturados por documento.
@@ -44,7 +44,7 @@ O sistema utiliza o banco vetorial ChromaDB (persistido em disco local com model
 v
 +-----------------------------------------------------------------------------------------+
 |                                  CAMADA DE INTERFACE (UI)                               |
-|                                 [ Streamlit App Container ]                             |
+|                        [ Página web servida pela API (src/web) ]                        |
 +-----------------------------------------------------------------------------------------+
 |
 | REST / HTTP JSON (Port 8000)

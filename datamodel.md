@@ -54,7 +54,7 @@ class MensagemEntrada(BaseModel):
     content: str
 
 class ChatRequest(BaseModel):
-    session_id: str = Field(..., description="ID da sessão ativa mantida no Streamlit")
+    session_id: str = Field(..., description="ID da sessão ativa mantida pela interface web")
     messages: list[MensagemEntrada] = Field(..., description="Histórico acumulado de mensagens da conversa")
 
 class CalculoNoChat(BaseModel):
