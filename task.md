@@ -2,29 +2,29 @@
 
 ## Fase 1: Alinhamento de Especificação e Configuração Inicial
 - [ ] **[T1.1]** Validar e consolidar os arquivos de especificação (`plan.md` e `Spec.md`) com a equipe e o Product Owner.
-- [ ] **[T1.2]** Inicializar a estrutura do repositório Git, criar o `.gitignore` (ignorando `.env`, `__pycache__` e diretórios de dados locais) e definir o fluxo de branches.
-- [ ] **[T1.3]** Criar o arquivo `.env.example` contendo a variável `GEMINI_API_KEY` e configurações de ambiente.
-- [ ] **[T1.4]** Configurar o gerenciador de dependências (`requirements.txt` ou `pyproject.toml`) com FastAPI, Uvicorn, Streamlit, ChromaDB, Structlog, Tenacity, Pydantic v2 e Pytest.
-- [ ] **[T1.5]** Adicionar os documentos originais do Regimento Acadêmico e Manual do Aluno em PDF no diretório `data/raw/`.
+- [x] **[T1.2]** Inicializar a estrutura do repositório Git, criar o `.gitignore` (ignorando `.env`, `__pycache__` e diretórios de dados locais) e definir o fluxo de branches.
+- [x] **[T1.3]** Criar o arquivo `.env.example` contendo a variável `GEMINI_API_KEY` e configurações de ambiente.
+- [x] **[T1.4]** Configurar o gerenciador de dependências (`requirements.txt` ou `pyproject.toml`) com FastAPI, Uvicorn, Streamlit, ChromaDB, Structlog, Tenacity, Pydantic v2 e Pytest.
+- [x] **[T1.5]** Adicionar os documentos originais do Regimento Acadêmico e Manual do Aluno em PDF no diretório `data/raw/`. *(Feito com documentos fictícios do IUVA; trocar pelos oficiais.)*
 
 ## Fase 2: Ingestão de Dados e Construção do RAG
-- [ ] **[T2.1]** Desenvolver o script de extração, limpeza e segmentação (chunking por Regex de Artigos) dos PDFs (`src/rag/ingest.py`), preservando metadados de capítulo, artigo e página. *Depende de: T1.5*
-- [ ] **[T2.2]** Implementar o módulo de integração e persistência local do banco vetorial ChromaDB (`src/rag/vectorstore.py`) utilizando a função de embeddings `text-embedding-004` (768d). *Depende de: T2.1*
-- [ ] **[T2.3]** Criar a ferramenta de busca vetorial (`src/rag/retriever.py`) empacotada com `asyncio.to_thread` e formatação estrita de citações e metadados. *Depende de: T2.2*
-- [ ] **[T2.4]** Escrever testes unitários em Pytest para o pipeline de busca e recuperação de contexto. *Depende de: T2.3*
+- [x] **[T2.1]** Desenvolver o script de extração, limpeza e segmentação (chunking por Regex de Artigos) dos PDFs (`src/rag/ingest.py`), preservando metadados de capítulo, artigo e página. *Depende de: T1.5*
+- [x] **[T2.2]** Implementar o módulo de integração e persistência local do banco vetorial ChromaDB (`src/rag/vectorstore.py`) utilizando a função de embeddings `text-embedding-004` (768d). *Depende de: T2.1*
+- [x] **[T2.3]** Criar a ferramenta de busca vetorial (`src/rag/retriever.py`) empacotada com `asyncio.to_thread` e formatação estrita de citações e metadados. *Depende de: T2.2*
+- [x] **[T2.4]** Escrever testes unitários em Pytest para o pipeline de busca e recuperação de contexto. *Depende de: T2.3*
 
 ## Fase 3: Desenvolvimento da Tool e Agente Inteligente
-- [ ] **[T3.1]** Implementar a função determinística Python `calcular_nota_final(p1, p2)` em `src/tools/calculator.py` com retorno Pydantic estrito, cobrindo aprovação direta ($MP \ge 7.0$), prova final ($4.0 \le MP < 7.0$, com $NF = 12 - MP$) e reprovação ($MP < 4.0$).
-- [ ] **[T3.2]** Escrever testes unitários Pytest para a calculadora cobrindo cenários normais e casos de borda (notas fora da escala $0.0 \text{ a } 10.0$). *Depende de: T3.1*
-- [ ] **[T3.3]** Criar o System Prompt estrito do assistente com instruções de fundamentação, recusa de temas fora de escopo e definições de schema Pydantic v2 para as Tools. *Depende de: T1.1*
-- [ ] **[T3.4]** Implementar o orquestrador do Agente ReAct (`src/agent/core.py`) unindo o RAG retriever, a Tool de cálculo e a API do Gemini com retries com exponential backoff (`tenacity`). *Depende de: T2.3, T3.1, T3.3*
+- [x] **[T3.1]** Implementar a função determinística Python `calcular_nota_final(p1, p2)` em `src/tools/calculator.py` com retorno Pydantic estrito, cobrindo aprovação direta ($MP \ge 7.0$), prova final ($4.0 \le MP < 7.0$, com $NF = 12 - MP$) e reprovação ($MP < 4.0$).
+- [x] **[T3.2]** Escrever testes unitários Pytest para a calculadora cobrindo cenários normais e casos de borda (notas fora da escala $0.0 \text{ a } 10.0$). *Depende de: T3.1*
+- [x] **[T3.3]** Criar o System Prompt estrito do assistente com instruções de fundamentação, recusa de temas fora de escopo e definições de schema Pydantic v2 para as Tools. *Depende de: T1.1*
+- [x] **[T3.4]** Implementar o orquestrador do Agente ReAct (`src/agent/core.py`) unindo o RAG retriever, a Tool de cálculo e a API do Gemini com retries com exponential backoff (`tenacity`). *Depende de: T2.3, T3.1, T3.3*
 
 ## Fase 4: API Backend e Interface do Usuário
-- [ ] **[T4.1]** Desenvolver o servidor FastAPI (`src/api/main.py`) com as rotas `POST /api/v1/chat` (suportando payload com histórico de mensagens), `GET /health/liveness` e `GET /health/readiness`. *Depende de: T3.4*
+- [x] **[T4.1]** Desenvolver o servidor FastAPI (`src/api/main.py`) com as rotas `POST /api/v1/chat` (suportando payload com histórico de mensagens), `GET /health/liveness` e `GET /health/readiness`. *Depende de: T3.4*
 - [ ] **[T4.2]** Implementar middleware de sanitização contra Prompt Injection e logging estruturado JSON com `structlog` registrando `request_id`, `latency_ms` e `tool_called`. *Depende de: T4.1*
-- [ ] **[T4.3]** Criar os testes de integração do FastAPI via `httpx.AsyncClient` para respostas HTTP 200, 422 e 503. *Depende de: T4.1*
-- [ ] **[T4.4]** Criar a interface conversacional em Streamlit (`src/frontend/app.py`) conectada ao backend FastAPI na porta `8000`. *Depende de: T4.1*
-- [ ] **[T4.5]** Formatar a interface Streamlit para exibir seções de citações (artigo e página) e destacar os resultados da calculadora. *Depende de: T4.4*
+- [x] **[T4.3]** Criar os testes de integração do FastAPI via `httpx.AsyncClient` para respostas HTTP 200, 422 e 503. *Depende de: T4.1* *(Feito com `fastapi.testclient.TestClient`.)*
+- [x] **[T4.4]** Criar a interface conversacional em Streamlit (`src/frontend/app.py`) conectada ao backend FastAPI na porta `8000`. *Depende de: T4.1*
+- [x] **[T4.5]** Formatar a interface Streamlit para exibir seções de citações (artigo e página) e destacar os resultados da calculadora. *Depende de: T4.4*
 
 ## Fase 5: Evals, Containerização e Publicação
 - [ ] **[T5.1]** Criar o dataset com os 15 casos de teste estruturados (6 RAG, 4 Tools, 3 Safety/Escopo e 2 Casos de Borda) em `tests/evals/dataset.json`. *Depende de: T1.1*

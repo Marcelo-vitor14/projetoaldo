@@ -2,14 +2,14 @@
 
 ## 1. Resumo Técnico
 Aplicação Web em Python composta por um backend assíncrono em FastAPI e um frontend reativo em Streamlit, totalmente empacotada em um contêiner Docker.
-O sistema utiliza o banco vetorial ChromaDB (persistido em disco local com modelo de embeddings `text-embedding-004`) para o pipeline RAG e integra um Agente ReAct inteligente capaz de delegar cálculos matemáticos acadêmicos para funções determinísticas puras em Python via Function Calling.
+O sistema utiliza o banco vetorial ChromaDB (persistido em disco local com modelo de embeddings `gemini-embedding-001`) para o pipeline RAG e integra um Agente ReAct inteligente capaz de delegar cálculos matemáticos acadêmicos para funções determinísticas puras em Python via Function Calling.
 
 ## 2. Contexto Técnico e Stack Tecnológica
 - **Linguagem & Versão:** Python 3.11+. Selecionado pelo suporte nativo a concorrência assíncrona (`asyncio`), tipagem estrita via Pydantic v2 e ecossistema robusto de IA.
 - **Framework Web Backend:** FastAPI com Uvicorn. Oferece alta performance para I/O assíncrono, validação automática de dados e geração de documentação OpenAPI/Swagger.
 - **Framework Web Frontend:** Streamlit. Permite a rápida criação de interfaces conversacionais ricas sem o overhead de JavaScript.
 - **Framework de IA:** Google GenAI SDK / LangChain. Fornece abstração padronizada para Function Calling, gerenciamento de prompts e integração com modelos Gemini.
-- **Modelo de IA & Embeddings:** Google Gemini 1.5 Flash para geração e `text-embedding-004` para vetorização (768 dimensões).
+- **Modelo de IA & Embeddings:** Google Gemini (`gemini-flash-lite-latest`) para geração e `gemini-embedding-001` para vetorização (768 dimensões). Os modelos previstos originalmente (Gemini 1.5 Flash e `text-embedding-004`) foram descontinuados pelo Google.
 - **Banco Vetorial:** ChromaDB (Persistência em Disco Local em `/app/data/vectordb`). Garante baixo overhead de infraestrutura e suporte a metadados estruturados por documento.
 - **Testes & Evals:** Pytest. Utilizado em suíte automatizada para validações unitárias, de integração e métricas quantitativas do RAG e do Agente.
 - **Empacotamento & Infraestrutura:** Docker e Docker Compose. Garantem isolamento completo de dependências, ambiente reproduzível e suporte a deploy em nuvem (Render, Railway, Fly.io ou Kubernetes).

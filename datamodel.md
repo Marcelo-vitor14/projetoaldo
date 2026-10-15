@@ -5,7 +5,7 @@
 
 ### Configuração do Banco Vetorial (ChromaDB)
 - **Nome da Coleção:** `regimento_academico`
-- **Modelo de Embedding:** Google `text-embedding-004`
+- **Modelo de Embedding:** Google `gemini-embedding-001` (substitui o `text-embedding-004`, descontinuado)
 - **Dimensão dos Vetores:** 768 dimensões
 - **Mapeamento de Persistência:** Diretório local `/app/data/vectordb`
 
@@ -57,9 +57,18 @@ class ChatRequest(BaseModel):
     session_id: str = Field(..., description="ID da sessão ativa mantida no Streamlit")
     messages: list[MensagemEntrada] = Field(..., description="Histórico acumulado de mensagens da conversa")
 
+class CalculoNoChat(BaseModel):
+    p1: float
+    p2: float
+    media_parcial: float
+    status: str                      # aprovado_direto | prova_final | reprovado_direto
+    nota_necessaria_final: Optional[float] = None
+
 class ChatResponse(BaseModel):
     session_id: str
     response: str
     sources: list[FonteCitada] = []
     tool_called: Optional[str] = None
+    calculo: Optional[CalculoNoChat] = None   # preenchido quando a calculadora é acionada
     latency_ms: float
+```
