@@ -4,7 +4,7 @@
 - [ ] **[T1.1]** Validar e consolidar os arquivos de especificação (`plan.md` e `Spec.md`) com a equipe e o Product Owner.
 - [x] **[T1.2]** Inicializar a estrutura do repositório Git, criar o `.gitignore` (ignorando `.env`, `__pycache__` e diretórios de dados locais) e definir o fluxo de branches.
 - [x] **[T1.3]** Criar o arquivo `.env.example` contendo a variável `GEMINI_API_KEY` e configurações de ambiente.
-- [x] **[T1.4]** Configurar o gerenciador de dependências (`requirements.txt` ou `pyproject.toml`) com FastAPI, Uvicorn, Streamlit, ChromaDB, Structlog, Tenacity, Pydantic v2 e Pytest.
+- [x] **[T1.4]** Configurar o gerenciador de dependências (`requirements.txt` ou `pyproject.toml`) com FastAPI, Uvicorn, ChromaDB, Structlog, Tenacity, Pydantic v2 e Pytest.
 - [x] **[T1.5]** Adicionar os documentos originais do Regimento Acadêmico e Manual do Aluno em PDF no diretório `data/raw/`. *(Feito com documentos fictícios do IUVA; trocar pelos oficiais.)*
 
 ## Fase 2: Ingestão de Dados e Construção do RAG
@@ -23,8 +23,8 @@
 - [x] **[T4.1]** Desenvolver o servidor FastAPI (`src/api/main.py`) com as rotas `POST /api/v1/chat` (suportando payload com histórico de mensagens), `GET /health/liveness` e `GET /health/readiness`. *Depende de: T3.4*
 - [ ] **[T4.2]** Implementar middleware de sanitização contra Prompt Injection e logging estruturado JSON com `structlog` registrando `request_id`, `latency_ms` e `tool_called`. *Depende de: T4.1*
 - [x] **[T4.3]** Criar os testes de integração do FastAPI via `httpx.AsyncClient` para respostas HTTP 200, 422 e 503. *Depende de: T4.1* *(Feito com `fastapi.testclient.TestClient`.)*
-- [x] **[T4.4]** Criar a interface conversacional em Streamlit (`src/frontend/app.py`) conectada ao backend FastAPI na porta `8000`. *Depende de: T4.1*
-- [x] **[T4.5]** Formatar a interface Streamlit para exibir seções de citações (artigo e página) e destacar os resultados da calculadora. *Depende de: T4.4*
+- [x] **[T4.4]** Criar a interface conversacional web (`src/web/index.html`) servida pelo backend FastAPI na porta `8000`. *Depende de: T4.1*
+- [x] **[T4.5]** Formatar a interface web para exibir seções de citações (artigo e página) e destacar os resultados da calculadora. *Depende de: T4.4*
 
 ## Fase 5: Evals, Containerização e Publicação
 - [ ] **[T5.1]** Criar o dataset com os 15 casos de teste estruturados (6 RAG, 4 Tools, 3 Safety/Escopo e 2 Casos de Borda) em `tests/evals/dataset.json`. *Depende de: T1.1*
@@ -43,5 +43,5 @@
   - Responsável pelas tarefas **T3.1 a T3.4** (Calculadora em Python, System Prompt e orquestrador ReAct).
   - Na sequência, apoia na construção das rotas do FastAPI (**T4.1 a T4.3**).
 - **Frente C (Frontend e DevOps):**
-  - Responsável pelas tarefas **T1.2 a T1.4** (Ambiente e projeto base) e avança para a interface Streamlit (**T4.4 e T4.5**).
+  - Responsável pelas tarefas **T1.2 a T1.4** (Ambiente e projeto base) e avança para a interface web (**T4.4 e T4.5**).
   - Na sequência, finaliza a containerização e deploy (**T5.3 a T5.5**).
