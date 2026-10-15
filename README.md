@@ -1,6 +1,8 @@
 # Tira-Dúvidas Acadêmico
 
-Aplicação inicial de chat acadêmico com API FastAPI e interface Streamlit. A primeira fatia executável entrega o cálculo determinístico de notas; a consulta ao Regimento via RAG será conectada quando os PDFs forem adicionados.
+Chat acadêmico com API FastAPI e interface Streamlit. Um agente com Google Gemini entende a pergunta, busca os trechos do Regimento e do Manual do Aluno no ChromaDB (RAG) e responde citando artigo e página; quando o aluno informa P1 e P2, o Gemini chama a calculadora determinística em Python (Function Calling).
+
+Os PDFs em `data/raw/` são de uma instituição fictícia (IUVA), criados para testes. Para usar documentos reais, troque os PDFs e rode a ingestão de novo.
 
 ## Requisitos
 
@@ -15,9 +17,12 @@ No PowerShell, a partir da raiz do projeto:
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-Copy-Item .env.example .env
+Copy-Item .env.example .env   # coloque sua chave em GEMINI_API_KEY
+python -m src.rag.ingest      # lê os PDFs de data/raw e cria a base em data/vectordb
 uvicorn src.api.main:app --reload --port 8000
 ```
+
+A chave do Gemini é gratuita em https://aistudio.google.com (Get API key). Se o Google responder "SERVICE_DISABLED", ative a Gemini API no projeto pelo link da mensagem de erro. A ingestão só precisa ser refeita quando os PDFs mudarem.
 
 Em outro terminal, com o mesmo ambiente virtual ativado:
 
@@ -25,11 +30,23 @@ Em outro terminal, com o mesmo ambiente virtual ativado:
 streamlit run src/frontend/app.py --server.port 8501
 ```
 
-Abra `http://localhost:8501`. A documentação interativa da API fica em `http://localhost:8000/docs`.
+Há duas interfaces:
 
-## Primeira capacidade
+- **Web (recomendada):** `http://localhost:8000`, servida pela própria API (`src/web/index.html`, HTML/CSS/JS sem dependências). Chat com sugestões, fontes clicáveis que abrem o artigo grifado num painel e calculadora com a régua das faixas de aprovação.
+- **Streamlit:** `http://localhost:8501`, a interface prevista na Spec, com tema escuro.
 
-O frontend tem três áreas: consulta em chat, calculadora de notas e informações sobre o serviço. Envie uma mensagem como `P1 5,5 e P2 6,0` ou use a calculadora para obter a média parcial e a nota necessária na Prova Final. A função Python valida notas de 0 a 10 e aplica os limites definidos em `Spec.md`.
+A documentação interativa da API fica em `http://localhost:8000/docs`.
+
+## Como funciona
+
+O frontend tem três áreas: consulta em chat, calculadora de notas e informações sobre o serviço. No chat, pergunte algo como `Quantas faltas posso ter numa disciplina de 60 horas?` ou `minha P1 deu cinco e meio e a P2 seis, passei?`.
+
+- `src/rag/ingest.py`: extrai o texto dos PDFs, corta por artigo (`Art. N`) ou seção (`Seção N`), gera embeddings com `gemini-embedding-001` (768 dimensões) e grava no ChromaDB com documento, capítulo, artigo e página.
+- `src/rag/retriever.py`: busca os trechos mais próximos da pergunta; trechos com distância de cosseno acima de 0,35 são descartados.
+- `src/agent/core.py`: agente com Gemini (`temperature=0`), prompt restrito ao Regimento e ao Manual e duas ferramentas, `buscar_regimento` e `calcular_nota_final`. Repete a chamada com espera crescente em erros 429/500/503.
+- `src/tools/calculator.py`: a conta é sempre feita em Python; o modelo só extrai P1 e P2.
+
+Sem `GEMINI_API_KEY`, o chat volta ao modo simples: reconhece P1 e P2 por expressão regular e não consulta documentos. Os testes (`python -m pytest`) rodam nesse modo, sem internet.
 
 As rotas são `POST /api/v1/chat`, `POST /api/v1/calcular-nota`, `GET /health/liveness` e `GET /health/readiness`. O chat recebe `session_id` e o histórico de mensagens. As citações da resposta são exibidas em cartões expansíveis quando a API retornar fontes.
 
@@ -44,13 +61,13 @@ As rotas são `POST /api/v1/chat`, `POST /api/v1/calcular-nota`, `GET /health/li
 
 Autenticação de usuários está fora do escopo desta versão, conforme `Spec.md`. Para publicação, configure HTTPS e restrinja o acesso no proxy/plataforma; não exponha a API diretamente à internet sem essa camada.
 
-O readiness retorna HTTP 503 até que o ChromaDB persistente esteja conectado. A consulta documental também permanece em preparação até a ingestão dos PDFs.
+O readiness retorna HTTP 503 até que a ingestão tenha gravado trechos no ChromaDB.
 
 ## Próximas entregas
 
-1. Colocar os PDFs autorizados em `data/raw/`.
-2. Implementar extração, chunking por artigo, embeddings e persistência ChromaDB.
-3. Integrar o SDK Google GenAI, Function Calling, limites de chamada e respostas fundamentadas com fontes.
-4. Acrescentar logs estruturados sem conteúdo de mensagens, testes, evals e containerização conforme as fases de `task.md`.
+1. Trocar os PDFs fictícios pelos documentos oficiais da instituição.
+2. Criar o dataset dos 15 evals e o script `src/evals/run_evals.py`.
+3. Reduzir a latência (hoje entre 2 e 8 segundos por resposta) para a meta de 3,5 s.
+4. Publicar em nuvem com HTTPS.
 
 Configure segredos em `.env`; não inclua chaves ou dados pessoais em commits.

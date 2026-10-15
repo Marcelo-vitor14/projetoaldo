@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tira-Dúvidas IUVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: barra fina no topo e o chat em tela cheia. O documento citado abre numa coluna à direita só quando uma fonte é clicada. */
+:root {
+  --bg: #0A0A0B;           /* preto */
+  --panel: #141417;        /* superfícies */
+  --panel-2: #1C1C21;      /* superfícies elevadas */
+  --line: #26262D;         /* bordas */
+  --text: #EDEDF0;
+  --muted: #8B8B96;
+  --blue: #5B9BFF;         /* destaque */
+  --blue-ink: #06101F;     /* texto sobre o azul */
+  --ok: #4ADE80; --warn: #FBBF24; --bad: #F87171;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+  --doc: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --r: 14px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text); font: 15px/1.55 var(--body);
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+}
+button, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ---------- Topo ---------- */
+.top {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding-block: 12px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand b { font: 700 1.15rem/1 var(--display); letter-spacing: -.01em; }
+.brand b span { color: var(--blue); }
+.brand small { color: var(--muted); font: 500 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.status { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: 500 .75rem var(--mono);
+}
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.chip.ok i { background: var(--ok); } .chip.warn i { background: var(--warn); } .chip.bad i { background: var(--bad); }
+.ghost {
+  border: 1px solid var(--line); background: transparent; border-radius: 10px; padding: 7px 12px; cursor: pointer; color: var(--muted);
+}
+.ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* ---------- Corpo ---------- */
+.main { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+.main.com-doc { grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); }
+.chat { display: grid; grid-template-rows: 1fr auto; min-height: 0; }
+.com-doc .chat { border-right: 1px solid var(--line); }
+.scroll { overflow-y: auto; padding: 28px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px)); }
+.thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+/* Abertura */
+.intro { padding-top: 5vh; display: grid; gap: 22px; }
+.intro .eyebrow { font: 500 .75rem var(--mono); color: var(--blue); letter-spacing: .1em; text-transform: uppercase; }
+.intro h1 { font: 700 clamp(2rem, 4.6vw, 3.3rem)/1.04 var(--display); letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+.intro h1 em { font-style: normal; color: var(--blue); }
+.intro p { color: var(--muted); max-width: 58ch; margin: 0; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.card {
+  text-align: left; cursor: pointer; padding: 16px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel);
+  display: grid; gap: 6px; transition: border-color .15s, transform .15s, background .15s;
+}
+.card:hover { border-color: var(--blue); background: var(--panel-2); transform: translateY(-2px); }
+.card .ref { font: 500 .72rem var(--mono); color: var(--blue); letter-spacing: .04em; }
+.card .q { font-weight: 500; }
+
+/* Mensagens */
+.msg { display: grid; gap: 10px; animation: in .25s ease-out both; }
+.msg.user { justify-items: end; }
+.bubble { max-width: 85%; padding: 12px 16px; border-radius: 16px; overflow-wrap: anywhere; }
+.user .bubble { background: var(--panel-2); border: 1px solid var(--line); border-bottom-right-radius: 4px; }
+.bot .bubble { padding: 2px 0; max-width: 100%; }
+.bot .who { font: 500 .72rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.bubble .cite { color: var(--blue); font-family: var(--mono); font-size: .88em; white-space: nowrap; }
+.bubble.erro { color: var(--warn); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.src {
+  display: inline-flex; gap: 8px; align-items: center; cursor: pointer; padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--panel); font: 500 .78rem var(--mono); color: var(--text);
+}
+.src:hover, .src[aria-pressed="true"] { border-color: var(--blue); }
+.src b { color: var(--blue); font-weight: 500; }
+.time { font: .72rem var(--mono); color: var(--muted); }
+.typing { display: inline-flex; gap: 5px; padding: 8px 0; }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); animation: blink 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes in { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Cartão do cálculo (RF06) */
+.calc { border: 1px solid var(--line); background: var(--panel); border-radius: var(--r); padding: 16px; display: grid; gap: 14px; max-width: 520px; }
+.calc .head { display: flex; justify-content: space-between; gap: 10px; font: 500 .7rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.nums small { display: block; font: 500 .68rem var(--mono); color: var(--muted); letter-spacing: .06em; }
+.nums strong { font: 700 1.6rem/1.2 var(--display); font-variant-numeric: tabular-nums; }
+.nums .alvo strong { color: var(--blue); }
+.ruler { position: relative; padding-top: 24px; }
+.bands { display: grid; grid-template-columns: 40fr 30fr 30fr; height: 8px; border-radius: 99px; overflow: hidden; gap: 2px; }
+.bands span:nth-child(1) { background: color-mix(in srgb, var(--bad) 45%, var(--panel)); }
+.bands span:nth-child(2) { background: color-mix(in srgb, var(--warn) 45%, var(--panel)); }
+.bands span:nth-child(3) { background: color-mix(in srgb, var(--ok) 45%, var(--panel)); }
+.ticks { position: relative; height: 16px; margin-top: 6px; font: .68rem var(--mono); color: var(--muted); }
+.ticks span { position: absolute; transform: translateX(-50%); }
+.ticks span:first-child { transform: none; } .ticks span:last-child { transform: translateX(-100%); }
+.pin { position: absolute; top: 0; transform: translateX(-50%); font: 600 .7rem var(--mono); white-space: nowrap; }
+.pin::after { content: ""; display: block; width: 2px; height: 14px; margin: 2px auto 0; background: var(--text); }
+.verdict { justify-self: start; padding: 5px 10px; border-radius: 999px; font: 600 .8rem var(--body); border: 1px solid; }
+.verdict.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.verdict.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.verdict.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.calc .note { font: .72rem var(--mono); color: var(--muted); }
+
+/* Campo de pergunta */
+.composer { padding: 12px max(20px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); }
+.composer form {
+  max-width: 760px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 8px 8px 8px 16px;
+}
+.composer form:focus-within { border-color: var(--blue); }
+.composer textarea { flex: 1; min-width: 0; resize: none; border: 0; background: transparent; outline: none; padding: 8px 0; max-height: 140px; }
+.send { border: 0; border-radius: 11px; padding: 10px 16px; background: var(--blue); color: var(--blue-ink); font-weight: 600; cursor: pointer; }
+.send:disabled { opacity: .45; cursor: default; }
+.hint { max-width: 760px; margin: 6px auto 0; color: var(--muted); font-size: .75rem; }
+
+/* ---------- Documento citado ---------- */
+.side { overflow-y: auto; padding: 22px max(20px, env(safe-area-inset-right, 0px)) 22px 20px; display: grid; align-content: start; gap: 14px; }
+.side-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.side-head h2 { font: 700 1.05rem var(--display); margin: 0; }
+.close { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 1.1rem; line-height: 1; }
+.close:hover { color: var(--text); border-color: var(--muted); }
+.sheet { background: #F5F5F2; color: #1E1E22; border-radius: 6px; padding: 22px 22px 18px; font: 1rem/1.65 var(--doc); }
+.sheet .head { display: flex; justify-content: space-between; gap: 10px; font: 500 .68rem var(--mono); color: #6B6B73; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid #DADAD6; padding-bottom: 8px; margin-bottom: 12px; }
+.sheet p { margin: 0; }
+.sheet mark { background: rgba(91,155,255,.28); color: inherit; box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 .1em; border-radius: 2px; }
+.sheet .foot { margin-top: 14px; font: .7rem var(--mono); color: #8A8A92; text-align: right; }
+
+@media (max-width: 900px) {
+  body { overflow: auto; height: auto; }
+  .main.com-doc { grid-template-columns: minmax(0, 1fr); }
+  .com-doc .chat { border-right: 0; border-bottom: 1px solid var(--line); }
+  .chat { min-height: 75vh; }
+  .side { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  .cards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><b>Tira-<span>Dúvidas</span></b><small>IUVA · Regimento 2026</small></div>
+  <div class="status" aria-live="polite">
+    <span class="chip" id="st-api"><i></i>API</span>
+    <span class="chip" id="st-docs"><i></i>Documentos</span>
+    <span class="chip ok"><i></i>Gemini</span>
+  </div>
+  <button class="ghost" id="novo" type="button">Nova conversa</button>
+</header>
+
+<div class="main" id="main">
+  <section class="chat" aria-label="Conversa">
+    <div class="scroll" id="scroll">
+      <div class="thread" id="thread">
+        <div class="intro" id="intro">
+          <div class="eyebrow">Assistente acadêmico com IA</div>
+          <h1>Pergunte ao <em>Regimento</em>.<br>A resposta vem com artigo e página.</h1>
+          <p>Faltas, trancamento, provas, TCC, biblioteca. Se informar suas notas de P1 e P2, a conta é feita pela calculadora, não pela IA.</p>
+          <div class="cards" id="cards"></div>
+        </div>
+      </div>
+    </div>
+    <div class="composer">
+      <form id="form">
+        <textarea id="pergunta" rows="1" placeholder="Ex.: quantas faltas posso ter numa disciplina de 60 horas?" aria-label="Sua pergunta"></textarea>
+        <button class="send" id="enviar" type="submit">Perguntar</button>
+      </form>
+      <div class="hint">Enter envia · Shift+Enter quebra a linha · Informativo: decisões oficiais são da Secretaria Acadêmica.</div>
+    </div>
+  </section>
+
+  <aside class="side" id="side" aria-label="Documento citado" hidden>
+    <div class="side-head"><h2>Trecho citado</h2><button class="close" id="fechar" type="button" aria-label="Fechar documento">×</button></div>
+    <div id="doc"></div>
+  </aside>
+</div>
+
+<script>
+const SUGESTOES = [
+  { ref: "Art. 15 · Frequência", q: "Quantas faltas posso ter numa disciplina de 60 horas?" },
+  { ref: "Art. 10 · Trancamento", q: "Até quando posso trancar a matrícula?" },
+  { ref: "Calculadora · Arts. 21–24", q: "Minha P1 deu cinco e meio e a P2 deu 6. Passei?" },
+  { ref: "Manual · Biblioteca", q: "Quantos livros posso pegar na biblioteca e por quanto tempo?" },
+];
+const STATUS = {
+  aprovado_direto: ["ok", "Aprovado direto"],
+  prova_final: ["warn", "Vai para a Prova Final"],
+  reprovado_direto: ["bad", "Reprovado direto"],
+};
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const nomeDoc = (arq) => /^regimento/i.test(arq) ? "Regimento Acadêmico" : /^manual/i.test(arq) ? "Manual do Aluno" : arq;
+
+const sessao = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now());
+const historico = [];
+let ocupado = false;
+
+/* Texto do Gemini: escapa, aplica **negrito** e destaca citações como (Art. 15, p. 2). */
+function formatar(texto) {
+  return esc(texto)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\(((?:Art\.|Seção)\s*\d+[º°]?[^)]{0,30})\)/g, '<span class="cite">($1)</span>')
+    .replace(/\n/g, "<br>");
+}
+
+function rolar() { const s = $("scroll"); s.scrollTop = s.scrollHeight; }
+
+function adicionarUsuario(texto) {
+  const el = document.createElement("div");
+  el.className = "msg user";
+  el.innerHTML = `<div class="bubble">${esc(texto)}</div>`;
+  $("thread").appendChild(el);
+}
+
+function adicionarBot() {
+  const el = document.createElement("div");
+  el.className = "msg bot";
+  el.innerHTML = `<div class="who">Assistente</div><div class="bubble"><span class="typing" aria-label="Respondendo"><i></i><i></i><i></i></span></div>`;
+  $("thread").appendChild(el);
+  return el;
+}
+
+function cartaoCalculo(c) {
+  const [cls, txt] = STATUS[c.status];
+  const final = c.nota_necessaria_final;
+  return `
+    <div class="calc">
+      <div class="head"><span>Calculadora · Arts. 21 a 24</span><span>P1 ${fmt(c.p1)} · P2 ${fmt(c.p2)}</span></div>
+      <div class="nums">
+        <div><small>MÉDIA PARCIAL</small><strong>${fmt(c.media_parcial)}</strong></div>
+        <div class="alvo"><small>PRECISA NA FINAL</small><strong>${final == null ? "—" : fmt(final)}</strong></div>
+        <div><small>REGRA</small><strong style="font-size:1rem">${final == null ? (c.media_parcial >= 7 ? "MP ≥ 7" : "MP < 4") : "12 − MP"}</strong></div>
+      </div>
+      <div class="ruler" aria-hidden="true">
+        <div class="pin" style="left:${Math.min(Math.max(c.media_parcial * 10, 3), 97)}%">${fmt(c.media_parcial)}</div>
+        <div class="bands"><span></span><span></span><span></span></div>
+        <div class="ticks"><span style="left:0">0</span><span style="left:40%">4</span><span style="left:70%">7</span><span style="left:100%">10</span></div>
+      </div>
+      <span class="verdict ${cls}">${txt}</span>
+      <div class="note">Conta feita pela calculadora em Python, não pela IA.</div>
+    </div>`;
+}
+
+function preencherBot(el, dados, erro) {
+  const bolha = el.querySelector(".bubble");
+  if (erro) { bolha.classList.add("erro"); bolha.textContent = erro; return; }
+  bolha.innerHTML = formatar(dados.response);
+  if (dados.calculo) el.insertAdjacentHTML("beforeend", cartaoCalculo(dados.calculo));
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  (dados.sources || []).forEach((f) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "src"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<b>${esc(f.artigo)}</b> · p. ${esc(f.pagina)} · ${esc(nomeDoc(f.documento))}`;
+    b.addEventListener("click", () => abrirFonte(f, b));
+    meta.appendChild(b);
+  });
+  if (dados.latency_ms) meta.insertAdjacentHTML("beforeend", `<span class="time">${(dados.latency_ms / 1000).toFixed(1)} s</span>`);
+  if (meta.children.length) el.appendChild(meta);
+}
+
+function abrirFonte(f, botao) {
+  document.querySelectorAll('.src[aria-pressed="true"]').forEach((b) => b.setAttribute("aria-pressed", "false"));
+  botao.setAttribute("aria-pressed", "true");
+  $("doc").innerHTML = `
+    <article class="sheet">
+      <div class="head"><span>${esc(nomeDoc(f.documento))}</span><span>IUVA · 2026</span></div>
+      <p><mark>${esc(f.trecho)}</mark></p>
+      <div class="foot">${esc(f.artigo)} · página ${esc(f.pagina)}</div>
+    </article>`;
+  $("side").hidden = false;
+  $("main").classList.add("com-doc");
+}
+
+function fecharFonte() {
+  $("side").hidden = true;
+  $("main").classList.remove("com-doc");
+  document.querySelectorAll('.src[aria-pressed="true"]').forEach((b) => b.setAttribute("aria-pressed", "false"));
+}
+
+async function perguntar(texto) {
+  texto = texto.trim();
+  if (!texto || ocupado) return;
+  ocupado = true; $("enviar").disabled = true;
+  $("intro")?.remove();
+  adicionarUsuario(texto);
+  historico.push({ role: "user", content: texto });
+  const el = adicionarBot();
+  rolar();
+  try {
+    const r = await fetch("/api/v1/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessao, messages: historico }),
+    });
+    if (!r.ok) {
+      historico.pop();
+      const msg = r.status === 503 ? "O assistente está temporariamente indisponível (limite do Gemini). Tente de novo em alguns segundos."
+        : r.status === 429 ? "Muitas perguntas seguidas. Espere um instante e tente de novo."
+        : "Não consegui processar essa pergunta. Confira o texto e tente de novo.";
+      preencherBot(el, null, msg);
+    } else {
+      const dados = await r.json();
+      historico.push({ role: "assistant", content: dados.response });
+      preencherBot(el, dados);
+    }
+  } catch {
+    historico.pop();
+    preencherBot(el, null, "Sem conexão com a API. Verifique se o servidor está rodando.");
+  }
+  ocupado = false; $("enviar").disabled = false; rolar(); $("pergunta").focus();
+}
+
+async function status() {
+  const marcar = (id, cls) => { $(id).className = `chip ${cls}`; };
+  try { marcar("st-api", (await fetch("/health/liveness")).ok ? "ok" : "bad"); } catch { marcar("st-api", "bad"); }
+  try { marcar("st-docs", (await fetch("/health/readiness")).ok ? "ok" : "warn"); } catch { marcar("st-docs", "bad"); }
+}
+
+SUGESTOES.forEach((s) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "card";
+  b.innerHTML = `<span class="ref">${esc(s.ref)}</span><span class="q">${esc(s.q)}</span>`;
+  b.addEventListener("click", () => perguntar(s.q));
+  $("cards").appendChild(b);
+});
+$("form").addEventListener("submit", (e) => { e.preventDefault(); const t = $("pergunta"); const v = t.value; t.value = ""; t.style.height = ""; perguntar(v); });
+$("pergunta").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("form").requestSubmit(); } });
+$("pergunta").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = `${e.target.scrollHeight}px`; });
+$("fechar").addEventListener("click", fecharFonte);
+$("novo").addEventListener("click", () => location.reload());
+status();
+</script>
+</body>
+</html>

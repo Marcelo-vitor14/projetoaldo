@@ -1,19 +1,24 @@
-"""Aplicação FastAPI inicial com cálculo disponível e RAG em preparação."""
+"""Aplicação FastAPI: chat com agente Gemini + RAG, e cálculo determinístico de notas."""
 
+import asyncio
 import re
 import time
 import uuid
 import os
+from pathlib import Path
 
 import structlog
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
 
-from src.api.schemas import CalculoRequest, CalculoResponse, ChatRequest, ChatResponse
+from src.agent.core import AgenteIndisponivel, responder
+from src.api.schemas import CalculoRequest, CalculoResponse, ChatRequest, ChatResponse, FonteCitada
+from src.config import get_settings
+from src.rag.vectorstore import total_indexado
 from src.tools.calculator import calcular_nota_final
 
 app = FastAPI(
@@ -88,6 +93,15 @@ def _formatar_nota(valor: float) -> str:
     return f"{valor:.2f}".rstrip("0").rstrip(".")
 
 
+WEB_INDEX = Path(__file__).resolve().parent.parent / "web" / "index.html"
+
+
+@app.get("/", include_in_schema=False)
+async def pagina_inicial() -> FileResponse:
+    """Interface web do chat (HTML/CSS/JS sem dependências), servida pela própria API."""
+    return FileResponse(WEB_INDEX, media_type="text/html")
+
+
 @app.get("/health/liveness")
 async def liveness() -> dict[str, str]:
     return {"status": "ok"}
@@ -95,11 +109,17 @@ async def liveness() -> dict[str, str]:
 
 @app.get("/health/readiness")
 async def readiness() -> Response:
-    # A prontidão depende do banco persistente, ainda não integrado nesta etapa.
-    return JSONResponse(
-        status_code=503,
-        content={"status": "not_ready", "vector_store": "not_configured"},
-    )
+    # Pronto apenas com o ChromaDB acessível e com trechos indexados.
+    try:
+        indexados = await asyncio.to_thread(total_indexado)
+    except Exception:
+        indexados = 0
+    if indexados == 0:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "vector_store": "not_configured"},
+        )
+    return JSONResponse(status_code=200, content={"status": "ready", "chunks": indexados})
 
 
 @app.post("/api/v1/chat", response_model=ChatResponse)
@@ -107,6 +127,30 @@ async def chat(request: ChatRequest) -> ChatResponse:
     started = time.perf_counter()
     if request.messages[-1].role != "user":
         return JSONResponse(status_code=422, content={"detail": "A última mensagem deve ser do usuário."})
+    if not get_settings().gemini_api_key:
+        return _responder_por_regex(request, started)
+
+    try:
+        resultado = await asyncio.to_thread(responder, [m.model_dump() for m in request.messages])
+    except AgenteIndisponivel as exc:
+        logger.warning("agent_unavailable", reason=str(exc))
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "O assistente está temporariamente indisponível. Tente novamente em instantes."},
+        )
+    logger.info("agent_answered", tool_called=resultado.ferramenta, rag_chunks_retrieved=len(resultado.fontes))
+    return ChatResponse(
+        session_id=request.session_id,
+        response=resultado.texto,
+        sources=[FonteCitada(**fonte) for fonte in resultado.fontes],
+        tool_called=resultado.ferramenta,
+        calculo=resultado.calculo,
+        latency_ms=(time.perf_counter() - started) * 1000,
+    )
+
+
+def _responder_por_regex(request: ChatRequest, started: float) -> ChatResponse:
+    """Plano B sem Gemini: reconhece P1 e P2 por expressão regular."""
     latest = request.messages[-1].content
     match = None
     for pattern in _NOTAS_RE:
@@ -132,18 +176,21 @@ async def chat(request: ChatRequest) -> ChatResponse:
         else:
             answer = f"Sua média parcial é {_formatar_nota(resultado.media_parcial)}: reprovação direta."
         tool_called = "calcular_nota_final"
+        calculo = resultado.model_dump()
     else:
         answer = (
             "Ainda não encontrei essa norma nos documentos oficiais. "
             "A consulta ao Regimento e ao Manual será ativada quando a base documental estiver configurada."
         )
         tool_called = None
+        calculo = None
 
     elapsed = (time.perf_counter() - started) * 1000
     return ChatResponse(
         session_id=request.session_id,
         response=answer,
         tool_called=tool_called,
+        calculo=calculo,
         latency_ms=elapsed,
     )
 
