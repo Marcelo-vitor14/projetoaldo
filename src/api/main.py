@@ -144,6 +144,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
         response=resultado.texto,
         sources=[FonteCitada(**fonte) for fonte in resultado.fontes],
         tool_called=resultado.ferramenta,
+        calculo=resultado.calculo,
         latency_ms=(time.perf_counter() - started) * 1000,
     )
 
@@ -175,18 +176,21 @@ def _responder_por_regex(request: ChatRequest, started: float) -> ChatResponse:
         else:
             answer = f"Sua média parcial é {_formatar_nota(resultado.media_parcial)}: reprovação direta."
         tool_called = "calcular_nota_final"
+        calculo = resultado.model_dump()
     else:
         answer = (
             "Ainda não encontrei essa norma nos documentos oficiais. "
             "A consulta ao Regimento e ao Manual será ativada quando a base documental estiver configurada."
         )
         tool_called = None
+        calculo = None
 
     elapsed = (time.perf_counter() - started) * 1000
     return ChatResponse(
         session_id=request.session_id,
         response=answer,
         tool_called=tool_called,
+        calculo=calculo,
         latency_ms=elapsed,
     )
 

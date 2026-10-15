@@ -45,9 +45,17 @@ class CalculoResponse(BaseModel):
     nota_necessaria_final: float | None = None
 
 
+class CalculoNoChat(CalculoResponse):
+    """Resultado da calculadora quando o agente a aciona, para a interface exibir o cartão."""
+
+    p1: float
+    p2: float
+
+
 class ChatResponse(BaseModel):
     session_id: str
     response: str
     sources: list[FonteCitada] = Field(default_factory=list)
     tool_called: str | None = None
+    calculo: CalculoNoChat | None = None
     latency_ms: float = Field(ge=0)

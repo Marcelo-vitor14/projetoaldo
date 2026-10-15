@@ -71,6 +71,7 @@ class RespostaAgente:
     texto: str
     fontes: list[dict] = field(default_factory=list)
     ferramenta: str | None = None
+    calculo: dict | None = None
 
 
 def _executar(nome: str, args: dict, resposta: RespostaAgente) -> dict:
@@ -80,7 +81,8 @@ def _executar(nome: str, args: dict, resposta: RespostaAgente) -> dict:
             resultado = calcular_nota_final(float(args["p1"]), float(args["p2"]))
         except (ValidationError, KeyError, TypeError, ValueError):
             return {"erro": "As notas precisam estar entre 0 e 10."}
-        return resultado.model_dump()
+        resposta.calculo = resultado.model_dump()
+        return resposta.calculo
     if nome == "buscar_regimento":
         trechos = buscar(str(args.get("consulta", "")))
         for trecho in trechos:

@@ -8,17 +8,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
 <style>
-/* Layout: barra fina no topo; à esquerda a conversa, à direita o "documento" (trecho citado ou calculadora). No celular, empilha. */
+/* Layout: barra fina no topo e o chat em tela cheia. O documento citado abre numa coluna à direita só quando uma fonte é clicada. */
 :root {
-  --ink: #0E121B;          /* fundo: grafite azulado */
-  --paper: #151B27;        /* superfícies */
-  --paper-2: #1C2433;      /* superfícies elevadas */
-  --line: #2A3446;         /* bordas */
-  --text: #E7EAF0;
-  --muted: #8E98AB;
-  --mark: #F2D45C;         /* marca-texto */
-  --mark-ink: #1A1608;     /* texto sobre o marca-texto */
-  --ok: #4FD18B; --warn: #F2A84B; --bad: #F2695C;
+  --bg: #0A0A0B;           /* preto */
+  --panel: #141417;        /* superfícies */
+  --panel-2: #1C1C21;      /* superfícies elevadas */
+  --line: #26262D;         /* bordas */
+  --text: #EDEDF0;
+  --muted: #8B8B96;
+  --blue: #5B9BFF;         /* destaque */
+  --blue-ink: #06101F;     /* texto sobre o azul */
+  --ok: #4ADE80; --warn: #FBBF24; --bad: #F87171;
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
@@ -27,28 +27,29 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body {
-  background: var(--ink); color: var(--text); font: 15px/1.55 var(--body);
+  background: var(--bg); color: var(--text); font: 15px/1.55 var(--body);
   display: grid; grid-template-rows: auto 1fr; overflow: hidden;
 }
 button, input, textarea { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--mark); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
 /* ---------- Topo ---------- */
 .top {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   padding-block: 12px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
-  border-bottom: 1px solid var(--line); background: var(--ink);
+  border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
 .brand b { font: 700 1.15rem/1 var(--display); letter-spacing: -.01em; }
-.brand b span { background: var(--mark); color: var(--mark-ink); padding: 0 .25em; border-radius: 3px; }
+.brand b span { color: var(--blue); }
 .brand small { color: var(--muted); font: 500 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 .status { display: flex; gap: 8px; flex-wrap: wrap; }
 .chip {
   display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--paper); color: var(--muted); font: 500 .75rem var(--mono);
+  border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: 500 .75rem var(--mono);
 }
 .chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .chip.ok i { background: var(--ok); } .chip.warn i { background: var(--warn); } .chip.bad i { background: var(--bad); }
@@ -58,120 +59,103 @@ button, input, textarea { font: inherit; color: inherit; }
 .ghost:hover { color: var(--text); border-color: var(--muted); }
 
 /* ---------- Corpo ---------- */
-.main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); min-height: 0; }
-.chat { display: grid; grid-template-rows: 1fr auto; min-height: 0; border-right: 1px solid var(--line); }
-.scroll { overflow-y: auto; padding: 28px max(20px, env(safe-area-inset-left, 0px)) 12px max(20px, env(safe-area-inset-right, 0px)); }
-.thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+.main.com-doc { grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); }
+.chat { display: grid; grid-template-rows: 1fr auto; min-height: 0; }
+.com-doc .chat { border-right: 1px solid var(--line); }
+.scroll { overflow-y: auto; padding: 28px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px)); }
+.thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 
 /* Abertura */
-.intro { padding-top: 4vh; display: grid; gap: 22px; }
-.intro .eyebrow { font: 500 .75rem var(--mono); color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
-.intro h1 {
-  font: 700 clamp(2rem, 4.6vw, 3.3rem)/1.02 var(--display); letter-spacing: -.03em; margin: 0; text-wrap: balance;
-}
-.intro h1 mark { background: var(--mark); color: var(--mark-ink); padding: 0 .14em; border-radius: 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.intro { padding-top: 5vh; display: grid; gap: 22px; }
+.intro .eyebrow { font: 500 .75rem var(--mono); color: var(--blue); letter-spacing: .1em; text-transform: uppercase; }
+.intro h1 { font: 700 clamp(2rem, 4.6vw, 3.3rem)/1.04 var(--display); letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+.intro h1 em { font-style: normal; color: var(--blue); }
 .intro p { color: var(--muted); max-width: 58ch; margin: 0; }
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .card {
-  text-align: left; cursor: pointer; padding: 16px; border-radius: var(--r); border: 1px solid var(--line); background: var(--paper);
+  text-align: left; cursor: pointer; padding: 16px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel);
   display: grid; gap: 6px; transition: border-color .15s, transform .15s, background .15s;
 }
-.card:hover { border-color: var(--mark); background: var(--paper-2); transform: translateY(-2px); }
-.card .ref { font: 500 .72rem var(--mono); color: var(--mark); letter-spacing: .04em; }
+.card:hover { border-color: var(--blue); background: var(--panel-2); transform: translateY(-2px); }
+.card .ref { font: 500 .72rem var(--mono); color: var(--blue); letter-spacing: .04em; }
 .card .q { font-weight: 500; }
 
 /* Mensagens */
 .msg { display: grid; gap: 10px; animation: in .25s ease-out both; }
 .msg.user { justify-items: end; }
 .bubble { max-width: 85%; padding: 12px 16px; border-radius: 16px; overflow-wrap: anywhere; }
-.user .bubble { background: var(--paper-2); border: 1px solid var(--line); border-bottom-right-radius: 4px; }
-.bot .bubble { background: transparent; padding: 2px 0; max-width: 100%; }
+.user .bubble { background: var(--panel-2); border: 1px solid var(--line); border-bottom-right-radius: 4px; }
+.bot .bubble { padding: 2px 0; max-width: 100%; }
 .bot .who { font: 500 .72rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
-.bubble mark.cite { background: color-mix(in srgb, var(--mark) 22%, transparent); color: var(--text); border-bottom: 2px solid var(--mark); padding: 0 .15em; border-radius: 2px; font-family: var(--mono); font-size: .9em; }
+.bubble .cite { color: var(--blue); font-family: var(--mono); font-size: .88em; white-space: nowrap; }
 .bubble.erro { color: var(--warn); }
 .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .src {
   display: inline-flex; gap: 8px; align-items: center; cursor: pointer; padding: 6px 10px; border-radius: 8px;
-  border: 1px solid var(--line); background: var(--paper); font: 500 .78rem var(--mono); color: var(--text);
+  border: 1px solid var(--line); background: var(--panel); font: 500 .78rem var(--mono); color: var(--text);
 }
-.src:hover, .src[aria-pressed="true"] { border-color: var(--mark); }
-.src b { color: var(--mark); font-weight: 500; }
-.tool { font: 500 .75rem var(--mono); color: var(--ok); }
+.src:hover, .src[aria-pressed="true"] { border-color: var(--blue); }
+.src b { color: var(--blue); font-weight: 500; }
 .time { font: .72rem var(--mono); color: var(--muted); }
 .typing { display: inline-flex; gap: 5px; padding: 8px 0; }
-.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--mark); animation: blink 1s infinite; }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); animation: blink 1s infinite; }
 .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
 @keyframes blink { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
 @keyframes in { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Cartão do cálculo (RF06) */
+.calc { border: 1px solid var(--line); background: var(--panel); border-radius: var(--r); padding: 16px; display: grid; gap: 14px; max-width: 520px; }
+.calc .head { display: flex; justify-content: space-between; gap: 10px; font: 500 .7rem var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.nums small { display: block; font: 500 .68rem var(--mono); color: var(--muted); letter-spacing: .06em; }
+.nums strong { font: 700 1.6rem/1.2 var(--display); font-variant-numeric: tabular-nums; }
+.nums .alvo strong { color: var(--blue); }
+.ruler { position: relative; padding-top: 24px; }
+.bands { display: grid; grid-template-columns: 40fr 30fr 30fr; height: 8px; border-radius: 99px; overflow: hidden; gap: 2px; }
+.bands span:nth-child(1) { background: color-mix(in srgb, var(--bad) 45%, var(--panel)); }
+.bands span:nth-child(2) { background: color-mix(in srgb, var(--warn) 45%, var(--panel)); }
+.bands span:nth-child(3) { background: color-mix(in srgb, var(--ok) 45%, var(--panel)); }
+.ticks { position: relative; height: 16px; margin-top: 6px; font: .68rem var(--mono); color: var(--muted); }
+.ticks span { position: absolute; transform: translateX(-50%); }
+.ticks span:first-child { transform: none; } .ticks span:last-child { transform: translateX(-100%); }
+.pin { position: absolute; top: 0; transform: translateX(-50%); font: 600 .7rem var(--mono); white-space: nowrap; }
+.pin::after { content: ""; display: block; width: 2px; height: 14px; margin: 2px auto 0; background: var(--text); }
+.verdict { justify-self: start; padding: 5px 10px; border-radius: 999px; font: 600 .8rem var(--body); border: 1px solid; }
+.verdict.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.verdict.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.verdict.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.calc .note { font: .72rem var(--mono); color: var(--muted); }
 
 /* Campo de pergunta */
 .composer { padding: 12px max(20px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); }
 .composer form {
   max-width: 760px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end;
-  background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 8px 8px 8px 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 8px 8px 8px 16px;
 }
-.composer form:focus-within { border-color: var(--mark); }
+.composer form:focus-within { border-color: var(--blue); }
 .composer textarea { flex: 1; min-width: 0; resize: none; border: 0; background: transparent; outline: none; padding: 8px 0; max-height: 140px; }
-.send {
-  border: 0; border-radius: 11px; padding: 10px 16px; background: var(--mark); color: var(--mark-ink); font-weight: 600; cursor: pointer;
-}
+.send { border: 0; border-radius: 11px; padding: 10px 16px; background: var(--blue); color: var(--blue-ink); font-weight: 600; cursor: pointer; }
 .send:disabled { opacity: .45; cursor: default; }
 .hint { max-width: 760px; margin: 6px auto 0; color: var(--muted); font-size: .75rem; }
 
-/* ---------- Painel lateral ---------- */
-.side { overflow-y: auto; padding: 22px max(20px, env(safe-area-inset-right, 0px)) 22px 20px; display: grid; align-content: start; gap: 18px; background: var(--ink); }
-.tabs { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); }
-.tabs button { flex: 1; border: 0; background: transparent; padding: 8px; border-radius: 9px; cursor: pointer; color: var(--muted); font-weight: 500; }
-.tabs button[aria-selected="true"] { background: var(--paper-2); color: var(--text); }
-.panel h2 { font: 700 1.05rem var(--display); margin: 0 0 4px; }
-.panel .sub { color: var(--muted); font-size: .82rem; margin: 0 0 14px; }
-
-/* Página do documento */
-.sheet {
-  background: #F4F1E8; color: #23201A; border-radius: 6px; padding: 22px 22px 18px; font: 1rem/1.65 var(--doc);
-  box-shadow: 0 18px 40px -20px rgba(0,0,0,.7); position: relative;
-}
-.sheet .head { display: flex; justify-content: space-between; gap: 10px; font: 500 .68rem var(--mono); color: #6E6757; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid #D9D3C2; padding-bottom: 8px; margin-bottom: 12px; }
+/* ---------- Documento citado ---------- */
+.side { overflow-y: auto; padding: 22px max(20px, env(safe-area-inset-right, 0px)) 22px 20px; display: grid; align-content: start; gap: 14px; }
+.side-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.side-head h2 { font: 700 1.05rem var(--display); margin: 0; }
+.close { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 1.1rem; line-height: 1; }
+.close:hover { color: var(--text); border-color: var(--muted); }
+.sheet { background: #F5F5F2; color: #1E1E22; border-radius: 6px; padding: 22px 22px 18px; font: 1rem/1.65 var(--doc); }
+.sheet .head { display: flex; justify-content: space-between; gap: 10px; font: 500 .68rem var(--mono); color: #6B6B73; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid #DADAD6; padding-bottom: 8px; margin-bottom: 12px; }
 .sheet p { margin: 0; }
-.sheet mark { background: linear-gradient(transparent 8%, rgba(242,212,92,.85) 8%, rgba(242,212,92,.85) 92%, transparent 92%); color: inherit; box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 .1em; }
-.sheet .foot { margin-top: 14px; font: .7rem var(--mono); color: #8A8371; text-align: right; }
-.empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 18px; color: var(--muted); font-size: .88rem; }
-
-/* Calculadora */
-.calc { display: grid; gap: 14px; }
-.inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.field { display: grid; gap: 6px; }
-.field label { font: 500 .72rem var(--mono); color: var(--muted); letter-spacing: .08em; }
-.field input {
-  width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper);
-  font: 500 1.4rem var(--mono); font-variant-numeric: tabular-nums;
-}
-.field input:focus { border-color: var(--mark); outline: none; }
-.result { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat { padding: 12px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); }
-.stat small { display: block; font: 500 .7rem var(--mono); color: var(--muted); letter-spacing: .06em; }
-.stat strong { font: 700 1.8rem/1.2 var(--display); font-variant-numeric: tabular-nums; }
-.verdict { padding: 10px 12px; border-radius: 10px; font-weight: 600; border: 1px solid; }
-.verdict.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); background: color-mix(in srgb, var(--ok) 10%, transparent); }
-.verdict.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); background: color-mix(in srgb, var(--warn) 10%, transparent); }
-.verdict.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); background: color-mix(in srgb, var(--bad) 10%, transparent); }
-/* Régua 0–10 com as faixas do Art. 22 a 24 */
-.ruler { position: relative; padding-top: 26px; }
-.bands { display: grid; grid-template-columns: 40fr 30fr 30fr; height: 10px; border-radius: 99px; overflow: hidden; }
-.bands span:nth-child(1) { background: color-mix(in srgb, var(--bad) 55%, var(--paper)); }
-.bands span:nth-child(2) { background: color-mix(in srgb, var(--warn) 55%, var(--paper)); }
-.bands span:nth-child(3) { background: color-mix(in srgb, var(--ok) 55%, var(--paper)); }
-.ticks { display: flex; justify-content: space-between; font: .68rem var(--mono); color: var(--muted); margin-top: 6px; position: relative; }
-.ticks span { position: absolute; transform: translateX(-50%); }
-.pin { position: absolute; top: 0; transform: translateX(-50%); font: 600 .72rem var(--mono); color: var(--text); transition: left .35s cubic-bezier(.2,.8,.2,1); white-space: nowrap; }
-.pin::after { content: ""; display: block; width: 2px; height: 16px; margin: 2px auto 0; background: var(--text); }
-.law { font-size: .78rem; color: var(--muted); }
-.law b { color: var(--text); font-weight: 500; font-family: var(--mono); }
+.sheet mark { background: rgba(91,155,255,.28); color: inherit; box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 .1em; border-radius: 2px; }
+.sheet .foot { margin-top: 14px; font: .7rem var(--mono); color: #8A8A92; text-align: right; }
 
 @media (max-width: 900px) {
   body { overflow: auto; height: auto; }
-  .main { grid-template-columns: minmax(0, 1fr); }
-  .chat { border-right: 0; border-bottom: 1px solid var(--line); min-height: 70vh; }
+  .main.com-doc { grid-template-columns: minmax(0, 1fr); }
+  .com-doc .chat { border-right: 0; border-bottom: 1px solid var(--line); }
+  .chat { min-height: 75vh; }
   .side { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
   .cards { grid-template-columns: minmax(0, 1fr); }
 }
@@ -189,13 +173,13 @@ button, input, textarea { font: inherit; color: inherit; }
   <button class="ghost" id="novo" type="button">Nova conversa</button>
 </header>
 
-<div class="main">
+<div class="main" id="main">
   <section class="chat" aria-label="Conversa">
     <div class="scroll" id="scroll">
       <div class="thread" id="thread">
         <div class="intro" id="intro">
           <div class="eyebrow">Assistente acadêmico com IA</div>
-          <h1>Pergunte ao <mark>Regimento</mark>.<br>A resposta vem com artigo e página.</h1>
+          <h1>Pergunte ao <em>Regimento</em>.<br>A resposta vem com artigo e página.</h1>
           <p>Faltas, trancamento, provas, TCC, biblioteca. Se informar suas notas de P1 e P2, a conta é feita pela calculadora, não pela IA.</p>
           <div class="cards" id="cards"></div>
         </div>
@@ -210,39 +194,9 @@ button, input, textarea { font: inherit; color: inherit; }
     </div>
   </section>
 
-  <aside class="side" aria-label="Painel">
-    <div class="tabs" role="tablist">
-      <button role="tab" id="tab-doc" aria-selected="true" type="button">Documento</button>
-      <button role="tab" id="tab-calc" aria-selected="false" type="button">Calculadora</button>
-    </div>
-
-    <div class="panel" id="panel-doc">
-      <h2>Trecho citado</h2>
-      <p class="sub">Clique numa fonte da resposta para ver o texto original grifado.</p>
-      <div id="doc"><div class="empty">Nenhuma fonte aberta ainda. As respostas sobre normas trazem botões como <b style="font-family:var(--mono);color:var(--mark)">Art. 15 · p. 2</b>.</div></div>
-    </div>
-
-    <div class="panel" id="panel-calc" hidden>
-      <h2>Nota da Prova Final</h2>
-      <p class="sub">Calculada em Python, pelas regras dos Arts. 21 a 24.</p>
-      <div class="calc">
-        <div class="inputs">
-          <div class="field"><label for="p1">P1</label><input id="p1" type="number" min="0" max="10" step="0.1" value="5.5" inputmode="decimal"></div>
-          <div class="field"><label for="p2">P2</label><input id="p2" type="number" min="0" max="10" step="0.1" value="6" inputmode="decimal"></div>
-        </div>
-        <div class="ruler" aria-hidden="true">
-          <div class="pin" id="pin" style="left:57.5%">MP 5,75</div>
-          <div class="bands"><span></span><span></span><span></span></div>
-          <div class="ticks"><span style="left:0">0</span><span style="left:40%">4</span><span style="left:70%">7</span><span style="left:100%">10</span></div>
-        </div>
-        <div class="result">
-          <div class="stat"><small>MÉDIA PARCIAL</small><strong id="mp">5,75</strong></div>
-          <div class="stat"><small>PRECISA NA FINAL</small><strong id="nf">6,25</strong></div>
-        </div>
-        <div class="verdict warn" id="verdict">Vai para a Prova Final</div>
-        <div class="law">Regra: <b>MP = (P1 + P2) / 2</b>. Aprovado direto com MP ≥ 7. Prova Final com 4 ≤ MP &lt; 7, precisando de <b>12 − MP</b>. Reprovado com MP &lt; 4.</div>
-      </div>
-    </div>
+  <aside class="side" id="side" aria-label="Documento citado" hidden>
+    <div class="side-head"><h2>Trecho citado</h2><button class="close" id="fechar" type="button" aria-label="Fechar documento">×</button></div>
+    <div id="doc"></div>
   </aside>
 </div>
 
@@ -253,20 +207,25 @@ const SUGESTOES = [
   { ref: "Calculadora · Arts. 21–24", q: "Minha P1 deu cinco e meio e a P2 deu 6. Passei?" },
   { ref: "Manual · Biblioteca", q: "Quantos livros posso pegar na biblioteca e por quanto tempo?" },
 ];
+const STATUS = {
+  aprovado_direto: ["ok", "Aprovado direto"],
+  prova_final: ["warn", "Vai para a Prova Final"],
+  reprovado_direto: ["bad", "Reprovado direto"],
+};
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nomeDoc = (arq) => /^regimento/i.test(arq) ? "Regimento Acadêmico" : /^manual/i.test(arq) ? "Manual do Aluno" : arq;
 
-let sessao = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now());
-let historico = [];
+const sessao = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now());
+const historico = [];
 let ocupado = false;
 
-/* Texto do Gemini: escapa, aplica **negrito** e grifa citações como (Art. 15, p. 2). */
+/* Texto do Gemini: escapa, aplica **negrito** e destaca citações como (Art. 15, p. 2). */
 function formatar(texto) {
   return esc(texto)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\(((?:Art\.|Seção)\s*\d+[º°]?[^)]{0,30})\)/g, '<mark class="cite">$1</mark>')
+    .replace(/\(((?:Art\.|Seção)\s*\d+[º°]?[^)]{0,30})\)/g, '<span class="cite">($1)</span>')
     .replace(/\n/g, "<br>");
 }
 
@@ -287,10 +246,32 @@ function adicionarBot() {
   return el;
 }
 
+function cartaoCalculo(c) {
+  const [cls, txt] = STATUS[c.status];
+  const final = c.nota_necessaria_final;
+  return `
+    <div class="calc">
+      <div class="head"><span>Calculadora · Arts. 21 a 24</span><span>P1 ${fmt(c.p1)} · P2 ${fmt(c.p2)}</span></div>
+      <div class="nums">
+        <div><small>MÉDIA PARCIAL</small><strong>${fmt(c.media_parcial)}</strong></div>
+        <div class="alvo"><small>PRECISA NA FINAL</small><strong>${final == null ? "—" : fmt(final)}</strong></div>
+        <div><small>REGRA</small><strong style="font-size:1rem">${final == null ? (c.media_parcial >= 7 ? "MP ≥ 7" : "MP < 4") : "12 − MP"}</strong></div>
+      </div>
+      <div class="ruler" aria-hidden="true">
+        <div class="pin" style="left:${Math.min(Math.max(c.media_parcial * 10, 3), 97)}%">${fmt(c.media_parcial)}</div>
+        <div class="bands"><span></span><span></span><span></span></div>
+        <div class="ticks"><span style="left:0">0</span><span style="left:40%">4</span><span style="left:70%">7</span><span style="left:100%">10</span></div>
+      </div>
+      <span class="verdict ${cls}">${txt}</span>
+      <div class="note">Conta feita pela calculadora em Python, não pela IA.</div>
+    </div>`;
+}
+
 function preencherBot(el, dados, erro) {
   const bolha = el.querySelector(".bubble");
   if (erro) { bolha.classList.add("erro"); bolha.textContent = erro; return; }
   bolha.innerHTML = formatar(dados.response);
+  if (dados.calculo) el.insertAdjacentHTML("beforeend", cartaoCalculo(dados.calculo));
   const meta = document.createElement("div");
   meta.className = "meta";
   (dados.sources || []).forEach((f) => {
@@ -300,22 +281,27 @@ function preencherBot(el, dados, erro) {
     b.addEventListener("click", () => abrirFonte(f, b));
     meta.appendChild(b);
   });
-  if (dados.tool_called) meta.insertAdjacentHTML("beforeend", '<span class="tool">✓ conta feita pela calculadora em Python</span>');
   if (dados.latency_ms) meta.insertAdjacentHTML("beforeend", `<span class="time">${(dados.latency_ms / 1000).toFixed(1)} s</span>`);
   if (meta.children.length) el.appendChild(meta);
-  if (dados.sources && dados.sources.length) abrirFonte(dados.sources[0], meta.querySelector(".src"));
 }
 
 function abrirFonte(f, botao) {
   document.querySelectorAll('.src[aria-pressed="true"]').forEach((b) => b.setAttribute("aria-pressed", "false"));
-  if (botao) botao.setAttribute("aria-pressed", "true");
-  mostrarAba("doc");
+  botao.setAttribute("aria-pressed", "true");
   $("doc").innerHTML = `
     <article class="sheet">
       <div class="head"><span>${esc(nomeDoc(f.documento))}</span><span>IUVA · 2026</span></div>
       <p><mark>${esc(f.trecho)}</mark></p>
-      <div class="foot">${esc(f.artigo)} · página ${esc(f.pagina)} · ${esc(f.documento)}</div>
+      <div class="foot">${esc(f.artigo)} · página ${esc(f.pagina)}</div>
     </article>`;
+  $("side").hidden = false;
+  $("main").classList.add("com-doc");
+}
+
+function fecharFonte() {
+  $("side").hidden = true;
+  $("main").classList.remove("com-doc");
+  document.querySelectorAll('.src[aria-pressed="true"]').forEach((b) => b.setAttribute("aria-pressed", "false"));
 }
 
 async function perguntar(texto) {
@@ -350,34 +336,6 @@ async function perguntar(texto) {
   ocupado = false; $("enviar").disabled = false; rolar(); $("pergunta").focus();
 }
 
-function mostrarAba(qual) {
-  $("tab-doc").setAttribute("aria-selected", String(qual === "doc"));
-  $("tab-calc").setAttribute("aria-selected", String(qual === "calc"));
-  $("panel-doc").hidden = qual !== "doc";
-  $("panel-calc").hidden = qual !== "calc";
-}
-
-let calcTimer;
-async function calcular() {
-  const p1 = parseFloat($("p1").value.replace(",", ".")), p2 = parseFloat($("p2").value.replace(",", "."));
-  const v = $("verdict");
-  if ([p1, p2].some((n) => Number.isNaN(n) || n < 0 || n > 10)) {
-    v.className = "verdict bad"; v.textContent = "As notas precisam estar entre 0 e 10."; return;
-  }
-  try {
-    const r = await fetch("/api/v1/calcular-nota", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p1, p2 }) });
-    if (!r.ok) throw new Error();
-    const d = await r.json();
-    $("mp").textContent = fmt(d.media_parcial);
-    $("nf").textContent = d.nota_necessaria_final == null ? "—" : fmt(d.nota_necessaria_final);
-    $("pin").style.left = `${d.media_parcial * 10}%`;
-    $("pin").textContent = `MP ${fmt(d.media_parcial)}`;
-    const mapa = { aprovado_direto: ["ok", "Aprovado direto, sem Prova Final"], prova_final: ["warn", "Vai para a Prova Final"], reprovado_direto: ["bad", "Reprovado direto"] };
-    const [cls, txt] = mapa[d.status];
-    v.className = `verdict ${cls}`; v.textContent = txt;
-  } catch { v.className = "verdict bad"; v.textContent = "Não foi possível calcular. A API está no ar?"; }
-}
-
 async function status() {
   const marcar = (id, cls) => { $(id).className = `chip ${cls}`; };
   try { marcar("st-api", (await fetch("/health/liveness")).ok ? "ok" : "bad"); } catch { marcar("st-api", "bad"); }
@@ -394,9 +352,7 @@ SUGESTOES.forEach((s) => {
 $("form").addEventListener("submit", (e) => { e.preventDefault(); const t = $("pergunta"); const v = t.value; t.value = ""; t.style.height = ""; perguntar(v); });
 $("pergunta").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("form").requestSubmit(); } });
 $("pergunta").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = `${e.target.scrollHeight}px`; });
-$("tab-doc").addEventListener("click", () => mostrarAba("doc"));
-$("tab-calc").addEventListener("click", () => mostrarAba("calc"));
-["p1", "p2"].forEach((id) => $(id).addEventListener("input", () => { clearTimeout(calcTimer); calcTimer = setTimeout(calcular, 250); }));
+$("fechar").addEventListener("click", fecharFonte);
 $("novo").addEventListener("click", () => location.reload());
 status();
 </script>

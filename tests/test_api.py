@@ -71,6 +71,8 @@ def test_chat_calcula_notas_informadas_em_linguagem_natural():
     assert "5.75" in response.json()["response"]
     assert "6.25" in response.json()["response"]
     assert response.json()["tool_called"] == "calcular_nota_final"
+    assert response.json()["calculo"]["nota_necessaria_final"] == 6.25
+    assert response.json()["calculo"]["p1"] == 5.5
 
 
 def test_chat_nao_finge_ter_consultado_documentos():
