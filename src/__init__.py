@@ -1,1 +1,1 @@
-"""Tira-Dúvidas Acadêmico."""
+"""Uni Search: assistente acadêmico inteligente."""

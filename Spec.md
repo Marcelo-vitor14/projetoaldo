@@ -1,4 +1,4 @@
-# Spec.md — Tira-Dúvidas Acadêmico & Copiloto do Aluno
+# Spec.md — Uni Search: Assistente Acadêmico Inteligente (antes "Tira-Dúvidas Acadêmico & Copiloto do Aluno")
 
 ## 1. Problema e Resultado Esperado
 - **Usuário prioritário:** Alunos universitários e equipe da Secretaria / Coordenação Acadêmica.
