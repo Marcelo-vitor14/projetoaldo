@@ -21,7 +21,7 @@ def test_pagina_web_e_servida_na_raiz():
 
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert "Tira-Dúvidas" in response.text
+    assert "Uni Search" in response.text
 
 
 def test_cors_so_permite_origem_configurada():

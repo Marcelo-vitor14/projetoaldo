@@ -1,4 +1,4 @@
-# Tira-Dúvidas Acadêmico
+# Uni Search — Assistente Acadêmico Inteligente
 
 Chat acadêmico com API FastAPI e interface web própria (HTML/CSS/JS). Um agente com Google Gemini entende a pergunta, busca os trechos do Regimento e do Manual do Aluno no ChromaDB (RAG) e responde citando artigo e página; quando o aluno informa P1 e P2, o Gemini chama a calculadora determinística em Python (Function Calling).
 

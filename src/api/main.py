@@ -22,7 +22,7 @@ from src.rag.vectorstore import total_indexado
 from src.tools.calculator import calcular_nota_final
 
 app = FastAPI(
-    title="Tira-Dúvidas Acadêmico",
+    title="Uni Search",
     description="Assistente informativo para normas acadêmicas e cálculo de notas.",
     version="0.1.0",
 )
