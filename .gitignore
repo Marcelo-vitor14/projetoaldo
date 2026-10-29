@@ -1,11 +1,7 @@
+# Segredos: nunca subir (cada parte tem o próprio .gitignore; este é uma rede de segurança)
 .env
-.venv/
+.env.*
+!.env.example
+.claude/
 __pycache__/
-*.py[cod]
-.pytest_cache/
-data/raw/*
-!data/raw/.gitkeep
-!data/raw/*_IUVA_2026.pdf
-data/vectordb/
-.coverage
-htmlcov/
+.venv/
