@@ -1,0 +1,20 @@
+# Segredos: nunca subir
+.env
+.env.backup
+.env.production
+
+# IA (FastAPI)
+ia/.venv/
+ia/data/vectordb/
+__pycache__/
+.pytest_cache/
+
+# Portal (Laravel)
+portal/vendor/
+portal/node_modules/
+portal/public/build/
+portal/public/hot
+portal/public/storage
+portal/storage/*.key
+portal/database/*.sqlite
+portal/.phpunit.result.cache
