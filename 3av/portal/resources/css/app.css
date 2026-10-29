@@ -1,0 +1,128 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===========================================
+   VISUAL DO UNI SEARCH
+   Cores da 2ª AV (preto + azul) no escuro, a mesma ideia no claro.
+   O "zinc" do Flux vira a nossa escala de cinzas: 50-300 no claro, 700-950 no escuro.
+   =========================================== */
+@theme {
+    --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+    --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+    --font-doc: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+
+    --color-zinc-50: #f7f8fa;
+    --color-zinc-100: #eef0f4;
+    --color-zinc-200: #e2e5eb;
+    --color-zinc-300: #cdd1da;
+    --color-zinc-400: #8b8b96;
+    --color-zinc-500: #6b7080;
+    --color-zinc-600: #4a4f5a;
+    --color-zinc-700: #26262d;
+    --color-zinc-800: #1c1c21;
+    --color-zinc-900: #111114;
+    --color-zinc-950: #0a0a0b;
+
+    --color-accent: #2f6feb;
+    --color-accent-content: #2f6feb;
+    --color-accent-foreground: #ffffff;
+
+    /* situações da régua de notas */
+    --color-nota-ruim: #dc2626;
+    --color-nota-final: #d97706;
+    --color-nota-ok: #16a34a;
+}
+
+@layer theme {
+    .dark {
+        --color-accent: #5b9bff;
+        --color-accent-content: #5b9bff;
+        --color-accent-foreground: #06101f;
+        --color-nota-ruim: #f87171;
+        --color-nota-final: #fbbf24;
+        --color-nota-ok: #4ade80;
+    }
+}
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply  !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
+
+/* ===========================================
+   PEÇAS DO CHAT (vindas da 2ª AV)
+   =========================================== */
+/* Régua da nota: faixas 0-4 (reprova), 4-7 (prova final), 7-10 (aprovado) e o marcador na média */
+.regua { position: relative; padding-top: 1.5rem; }
+.regua-faixas { display: grid; grid-template-columns: 40fr 30fr 30fr; gap: 2px; height: 8px; border-radius: 99px; overflow: hidden; }
+.regua-faixas span:nth-child(1) { background: color-mix(in srgb, var(--color-nota-ruim) 45%, transparent); }
+.regua-faixas span:nth-child(2) { background: color-mix(in srgb, var(--color-nota-final) 45%, transparent); }
+.regua-faixas span:nth-child(3) { background: color-mix(in srgb, var(--color-nota-ok) 45%, transparent); }
+.regua-marcos { position: relative; height: 1rem; margin-top: .35rem; font: .66rem var(--font-mono); color: var(--color-zinc-400); }
+.regua-marcos span { position: absolute; transform: translateX(-50%); }
+.regua-marcos span:first-child { transform: none; }
+.regua-marcos span:last-child { transform: translateX(-100%); }
+.regua-pino { position: absolute; top: 0; transform: translateX(-50%); font: 600 .7rem var(--font-mono); white-space: nowrap; }
+.regua-pino::after { content: ""; display: block; width: 2px; height: 14px; margin: 2px auto 0; background: currentColor; }
+
+/* Brilho azul suave no topo da área principal (escuro) */
+.fundo-uni { background-image: radial-gradient(1100px 380px at 75% -10%, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent); }
+
+/* Alpine: esconde o que só aparece depois de carregar (ex.: trecho de uma fonte) */
+[x-cloak] { display: none !important; }
+
+/* ===========================================
+   BARRA DE ROLAMENTO: fina e invisível; aparece discreta só com o mouse em cima da área que rola
+   =========================================== */
+/* espaço da barra da página sempre reservado: o conteúdo não "pula" entre páginas curtas e compridas */
+html { scrollbar-gutter: stable; }
+* { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+*:hover { scrollbar-color: color-mix(in srgb, var(--color-zinc-400) 45%, transparent) transparent; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; }
+:hover::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color-zinc-400) 45%, transparent); }
+
+/* ===========================================
+   TRECHO CITADO (painel à direita, como na 2ª AV): uma folha de papel com o trecho grifado
+   =========================================== */
+.folha-doc { background: #f5f5f2; color: #1e1e22; border-radius: 6px; padding: 22px 22px 18px; font: 1rem/1.65 var(--font-doc); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+.folha-doc .cab { display: flex; justify-content: space-between; gap: 10px; font: 500 .66rem var(--font-mono); color: #6b6b73; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid #dadad6; padding-bottom: 8px; margin-bottom: 12px; }
+.folha-doc mark { background: color-mix(in srgb, var(--color-accent) 28%, transparent); color: inherit; box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 .1em; border-radius: 2px; }
+.folha-doc .pe { margin-top: 14px; font: .7rem var(--font-mono); color: #8a8a92; text-align: right; }
+
+/* Chat: enquanto a resposta "digita", cartões e fontes (tudo depois do texto) esperam o texto terminar */
+.esperando-digitar > :nth-child(n + 3) {
+    display: none;
+}
